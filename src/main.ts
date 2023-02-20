@@ -1,3 +1,4 @@
+import { pickPort, recyclePort } from "./ports.js";
 import { websockify } from "@e9x/websockify";
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
@@ -35,8 +36,6 @@ const wss = new WebSocketServer({
   server: http,
 });
 
-let i = 0;
-
 wss.on("connection", (socket) => {
   console.log("connection:");
   // Set the default sock file path
@@ -45,7 +44,7 @@ wss.on("connection", (socket) => {
       ? join("\\\\?\\pipe", process.cwd(), "session.sock")
       : join(process.cwd(), "session.sock")) + Math.random().toString(36);*/
 
-  const port = 6100 + i++;
+  const port = pickPort();
 
   const vncServer = spawn("docker", ["run", "-p", `${port}:5901`, "chromed"], {
     stdio: "pipe",
@@ -85,7 +84,10 @@ wss.on("connection", (socket) => {
     vncServer.once("error", onError);
   });
 
-  vncServer.on("exit", () => socket.close());
+  vncServer.on("exit", () => {
+    socket.close();
+    recyclePort(port);
+  });
 
   socket.on("close", () => {
     vncServer.kill("SIGINT");
