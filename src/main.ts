@@ -77,7 +77,6 @@ wss.on("connection", (socket, req) => {
   started.then(() =>
     websockify(socket, {
       port,
-      // path: sockPath,
     })
   );
 });
