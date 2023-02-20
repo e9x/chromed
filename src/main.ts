@@ -4,22 +4,6 @@ import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { WebSocketServer } from "ws";
 
-function parseLocation(l: string) {
-  const split = l.split(":");
-
-  if (split.length !== 2) return false;
-
-  const host = split[0];
-  const port = Number(split[1]);
-
-  if (isNaN(port)) return false;
-
-  return {
-    host,
-    port,
-  };
-}
-
 const listenL = parseLocation(process.argv[2] || process.env.LISTEN || "");
 
 if (!listenL) {
@@ -116,3 +100,19 @@ http.on("listening", () => {
 });
 
 http.listen(listenL);
+
+function parseLocation(l: string) {
+  const split = l.split(":");
+
+  if (split.length !== 2) return false;
+
+  const host = split[0];
+  const port = Number(split[1]);
+
+  if (isNaN(port)) return false;
+
+  return {
+    host,
+    port,
+  };
+}
