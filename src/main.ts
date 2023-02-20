@@ -1,5 +1,5 @@
 import { websockify } from "@e9x/websockify";
-import { exec, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createServer } from "node:http";
 import { platform } from "node:os";
 import { join } from "node:path";
