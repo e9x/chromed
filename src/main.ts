@@ -30,9 +30,13 @@ wss.on("connection", (socket, req) => {
     req.socket.remoteAddress
   );
 
-  const vncServer = spawn("docker", ["run", "-p", `${port}:5901`, "chromed"], {
-    stdio: ["inherit", "pipe", "inherit"],
-  });
+  const vncServer = spawn(
+    "docker",
+    ["run", "--shm-size", "1g", "-p", `${port}:5901`, "chromed"],
+    {
+      stdio: ["inherit", "pipe", "inherit"],
+    }
+  );
 
   const { stdout } = vncServer;
 
