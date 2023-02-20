@@ -31,17 +31,14 @@ wss.on("connection", (socket, req) => {
   );
 
   const vncServer = spawn("docker", ["run", "-p", `${port}:5901`, "chromed"], {
-    stdio: "pipe",
+    stdio: ["inherit", "pipe", "inherit"],
   });
 
-  console.log(port);
+  const { stdout } = vncServer;
 
-  const { stdout, stderr } = vncServer;
-
-  if (!stdout || !stderr) throw new Error("missing stdout");
+  if (!stdout) throw new Error("missing stdout");
 
   stdout.pipe(process.stdout);
-  stderr.pipe(process.stderr);
 
   // Use the sockPath variable in your web server configuration
   // console.log(`Using sock file path: ${sockPath}`);
