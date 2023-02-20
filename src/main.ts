@@ -32,7 +32,7 @@ wss.on("connection", (socket, req) => {
 
   const vncServer = spawn(
     "docker",
-    ["run", "--shm-size", "1g", "-p", `${port}:5901`, "chromed"],
+    ["run", "--shm-size", "256mb", "-p", `${port}:5901`, "chromed"],
     {
       stdio: ["inherit", "pipe", "inherit"],
     }
