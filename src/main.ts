@@ -20,15 +20,15 @@ const wss = new WebSocketServer({
   server: http,
 });
 
-wss.on("connection", (socket) => {
-  console.log("connection:");
-  // Set the default sock file path
-  /*const sockPath =
-    (platform() === "win32"
-      ? join("\\\\?\\pipe", process.cwd(), "session.sock")
-      : join(process.cwd(), "session.sock")) + Math.random().toString(36);*/
-
+wss.on("connection", (socket, req) => {
   const port = pickPort();
+
+  console.log(
+    "Using port",
+    port,
+    "for connection from",
+    req.socket.remoteAddress
+  );
 
   const vncServer = spawn("docker", ["run", "-p", `${port}:5901`, "chromed"], {
     stdio: "pipe",
