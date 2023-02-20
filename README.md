@@ -62,3 +62,14 @@ Docker is used because:
    ```
    pm2 start "npm start 127.0.0.1:1080" --name "chromed"
    ```
+
+7. Use noVNC to connect to the websocket server.
+
+   > You can use any noVNC instance. The client will connect directly to the WebSocket server.
+
+   Click on the settings icon (gears), advanced settings, websocket then enter the following:
+
+   - Enable/disable encrypt depending on if you are running this behind a reverse proxy with SSL (nginx, cloudflare)
+     If you don't know this/are just testing, try disabling it.
+   - Change the host to the address you passed to `npm start`, eg **127.0.0.1**:1080 `127.0.0.1`
+   - Change the port to the port you passed to `npm start`, eg 127.0.0.1:**1080** `1080`
