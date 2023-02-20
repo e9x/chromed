@@ -6,12 +6,12 @@ import { WebSocketServer } from "ws";
 function parseLocation(l: string) {
   const split = l.split(":");
 
-  if (split.length !== 2) throw new Error("Invalid format");
+  if (split.length !== 2) return false;
 
   const host = split[0];
   const port = Number(split[1]);
 
-  if (isNaN(port)) throw new Error("Invalid port");
+  if (isNaN(port)) return false;
 
   return {
     host,
@@ -19,7 +19,15 @@ function parseLocation(l: string) {
   };
 }
 
-const listenL = parseLocation(process.argv[2]);
+const listenL = parseLocation(process.argv[2] || process.env.LISTEN || "");
+
+if (!listenL) {
+  console.log("Usage:");
+  console.log(`\t${process.argv[0]} ${process.argv[1]} <listen address:port>`);
+  console.log("Env:");
+  console.log(`\tLISTEN=<address:port>`);
+  process.exit(1);
+}
 
 const http = createServer();
 
