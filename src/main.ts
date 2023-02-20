@@ -1,8 +1,6 @@
 import { websockify } from "@e9x/websockify";
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
-import { platform } from "node:os";
-import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
 
@@ -30,36 +28,86 @@ const wss = new WebSocketServer({
   server: http,
 });
 
-// Set the default sock file path
-const sockPath =
-  platform() === "win32"
-    ? join("\\\\?\\pipe", process.cwd(), "session.sock")
-    : join(process.cwd(), "session.sock");
+let i = 0;
 
-spawn(
-  "vncserver",
-  [
-    "-geometry",
-    "1280x720",
-    "-fg",
-    "-xstartup",
-    fileURLToPath(new URL("../xstartup.sh", import.meta.url)),
-    "-rfbunixpath",
-    sockPath,
-  ],
-  {
-    stdio: "inherit",
-  }
-);
+wss.on("connection", (socket) => {
+  console.log("connection:");
+  // Set the default sock file path
+  /*const sockPath =
+    (platform() === "win32"
+      ? join("\\\\?\\pipe", process.cwd(), "session.sock")
+      : join(process.cwd(), "session.sock")) + Math.random().toString(36);*/
 
-// Use the sockPath variable in your web server configuration
-console.log(`Using sock file path: ${sockPath}`);
+  const port = 6100 + i++;
 
-wss.on("connection", (socket) =>
-  websockify(socket, {
-    path: sockPath,
-  })
-);
+  const vncServer = spawn(
+    "vncserver",
+    [
+      "-geometry",
+      "1280x720",
+      "-fg",
+      "-autokill",
+      "-xstartup",
+      fileURLToPath(new URL("../xstartup.sh", import.meta.url)),
+      "-rfbport",
+      port.toString(),
+      // "-rfbunixpath",
+      // sockPath,
+    ],
+    {
+      stdio: "pipe",
+    }
+  );
+
+  const { stdout, stderr } = vncServer;
+
+  if (!stdout || !stderr) throw new Error("missing stdout");
+
+  stdout.pipe(process.stdout);
+  stderr.pipe(process.stderr);
+
+  // Use the sockPath variable in your web server configuration
+  // console.log(`Using sock file path: ${sockPath}`);
+
+  const started = new Promise<void>((resolve, reject) => {
+    const cleanup = () => {
+      stderr.off("data", onData);
+      vncServer.off("error", onError);
+    };
+
+    const onData = (data: Buffer) => {
+      if (data.toString().includes("Starting applications specified in")) {
+        cleanup();
+        setTimeout(() => resolve(), 3000);
+      }
+    };
+
+    const onError = () => {
+      cleanup();
+      reject();
+    };
+
+    stderr.on("data", onData);
+    vncServer.once("error", onError);
+  });
+
+  vncServer.on("exit", () => socket.close());
+
+  socket.on("close", () => {
+    console.log("socket close");
+    vncServer.kill("SIGINT");
+    setTimeout(() => {
+      vncServer.kill("SIGTERM");
+    }, 3000);
+  });
+
+  started.then(() =>
+    websockify(socket, {
+      port,
+      // path: sockPath,
+    })
+  );
+});
 
 http.on("request", (req, res) => {
   res.writeHead(405, {
