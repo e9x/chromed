@@ -8,7 +8,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "watch": "tsc --watch"
+    "watch": "tsc --watch",
+    "start": "node dist/main.js"
   },
   "dependencies": {
     "@e9x/websockify": "^1.0.0-alpha.1",
