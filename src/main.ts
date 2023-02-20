@@ -1,7 +1,6 @@
 import { websockify } from "@e9x/websockify";
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
-import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
 
 function parseLocation(l: string) {
@@ -40,24 +39,11 @@ wss.on("connection", (socket) => {
 
   const port = 6100 + i++;
 
-  const vncServer = spawn(
-    "vncserver",
-    [
-      "-geometry",
-      "1280x720",
-      "-fg",
-      "-autokill",
-      "-xstartup",
-      fileURLToPath(new URL("../xstartup.sh", import.meta.url)),
-      "-rfbport",
-      port.toString(),
-      // "-rfbunixpath",
-      // sockPath,
-    ],
-    {
-      stdio: "pipe",
-    }
-  );
+  const vncServer = spawn("docker", ["run", "-p", `${port}:5901`, "chromed"], {
+    stdio: "pipe",
+  });
+
+  console.log(port);
 
   const { stdout, stderr } = vncServer;
 
@@ -71,14 +57,14 @@ wss.on("connection", (socket) => {
 
   const started = new Promise<void>((resolve, reject) => {
     const cleanup = () => {
-      stderr.off("data", onData);
+      stdout.off("data", onData);
       vncServer.off("error", onError);
     };
 
     const onData = (data: Buffer) => {
-      if (data.toString().includes("Starting applications specified in")) {
+      if (data.toString().includes("New Xtigervnc server")) {
         cleanup();
-        setTimeout(() => resolve(), 3000);
+        setTimeout(() => resolve(), 1000);
       }
     };
 
@@ -87,18 +73,14 @@ wss.on("connection", (socket) => {
       reject();
     };
 
-    stderr.on("data", onData);
+    stdout.on("data", onData);
     vncServer.once("error", onError);
   });
 
   vncServer.on("exit", () => socket.close());
 
   socket.on("close", () => {
-    console.log("socket close");
     vncServer.kill("SIGINT");
-    setTimeout(() => {
-      vncServer.kill("SIGTERM");
-    }, 3000);
   });
 
   started.then(() =>
