@@ -74,3 +74,5 @@ Docker is used because:
    - Change the path if you're running this behind a reverse proxy.
    - Change the host to the address you passed to `npm start`, eg **127.0.0.1**:1080 `127.0.0.1`
    - Change the port to the port you passed to `npm start`, eg 127.0.0.1:**1080** `1080`
+
+![Screenshot](./docs/Screenshot_20230220_145041.png)
